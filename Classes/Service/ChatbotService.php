@@ -47,7 +47,7 @@ class ChatbotService
                     'model' => $this->extensionConfiguration->get('chatbot', 'chatgpt_model'),
                     'messages' => [
                         ['role' => 'user', 'content' => $message],
-                        ['role' => 'system', 'content' => $this->buildSystemPrompt()]
+                        ['role' => 'system', 'content' => $this->buildSystemPrompt($language)]
                     ]
                 ]
             ]
