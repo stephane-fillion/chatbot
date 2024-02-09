@@ -1,0 +1,5 @@
+# cat=basic; type=string; label=ChatGPT Api key
+chatgpt_apikey = 
+
+# cat=basic; type=string; label=ChatGPT model
+chatgpt_model = gpt-3.5-turbo

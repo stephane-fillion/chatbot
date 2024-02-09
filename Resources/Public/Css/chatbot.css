@@ -1,0 +1,87 @@
+.chatbox {
+    border: solid thin gray;
+    background-color: rgba(255, 255, 255, 0.9);
+    width: 100%;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 999999;
+    max-width: 800px;
+    overflow: scroll;
+}
+
+.chatbox .chatbox-header {
+    background-color: var(--module-docheader-bg);
+    padding: 10px;
+    border-bottom: thin solid var(--module-docheader-border);
+    display: flex;
+}
+
+.chatbox .chatbox-header h3 {
+    flex-grow: 1;
+    margin: 0px;
+    line-height: 18px;
+    height: 18px;
+}
+
+.chatbox .chatbox-header button.maximize {
+    display: none;
+}
+
+.chatbox .chatbox-history {
+    width: 100%;
+    display: flex;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 150px;
+    overflow: scroll;
+    flex-wrap: wrap;
+    scroll-behavior: smooth;
+}
+
+.chatbox .chatbox-history .chatbox-history-content {
+    width: 100%;
+    display: flex;
+    flex-flow: column wrap;
+}
+
+.chatbox .chatbox-history .chatbox-history-content div {
+    padding: 0.25em 0.75em;
+    margin: 0.0625em 25px;
+    max-width: 50%;
+    color: white;
+    border-radius: 1em;
+}
+.chatbox .chatbox-history .chatbox-history-content div .chatbox-datetime {
+    display: block;
+    font-weight: bold;
+}
+
+.chatbox .chatbox-history .chatbox-history-content div.question {
+    background-color: #48c78e;
+    align-self: flex-end;
+}
+
+.chatbox .chatbox-history .chatbox-history-content div.answer {
+    background-color: #3e8ed0;
+    align-self: flex-start;
+}
+
+.chatbox .chatbox-input {
+    display: flex;
+    margin-bottom: 0px;
+}
+
+.chatbox.minimize {
+    max-width: 300px;
+}
+
+.chatbox.minimize .chatbox-input,
+.chatbox.minimize .chatbox-history,
+.chatbox.minimize .chatbox-header button.minimize,
+.chatbox.minimize .chatbox-header button.clear {
+    display: none;
+}
+.chatbox.minimize .chatbox-header button.maximize {
+    display: initial;
+}

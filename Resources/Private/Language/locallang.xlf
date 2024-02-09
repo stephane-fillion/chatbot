@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+	<file source-language="en" datatype="plaintext" original="messages" date="2024-02-08T15:40:13Z" product-name="chatbot">
+		<header/>
+		<body>
+            <trans-unit id="needHelp" xml:space="preserve"><source>Need help ?</source></trans-unit>
+            <trans-unit id="answer" xml:space="preserve"><source>Answer</source></trans-unit>
+            <trans-unit id="error.api" xml:space="preserve"><source>An error occured %s</source></trans-unit>
+            <trans-unit id="systemPrompt" xml:space="preserve"><source>You are an assistant for help contributor in a TYPO3 backend. Here are the existing record types: %s. Here is the page tree: %s</source></trans-unit>
+        </body>
+    </file>
+</xliff>

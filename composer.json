@@ -1,0 +1,35 @@
+{
+    "name": "ameos/chatbot",
+    "description": "Chatbot to help TYPO3 contributors in the backend.",
+    "type": "typo3-cms-extension",
+    "homepage": "https://github.com/ameos/chatbot",
+    "require": {
+        "typo3/cms-core": "^12.4",
+        "php": ">=8.1.0"
+    },
+    "keywords": [
+        "TYPO3",
+        "CMS",
+        "Chatbot",
+        "Help",
+        "Backend"
+    ],
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Ameos Team",
+            "email": "typo3dev@ameos.com",
+            "homepage": "http://www.ameos.com/"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Ameos\\Chatbot\\": "Classes"
+        }
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "chatbot"
+        }
+    }
+}

@@ -1,0 +1,28 @@
+<div class="chatbox">
+    <div class="chatbox-header">
+        <h3>{f:translate(key: "needHelp", extensionName: "chatbot")}</h3>
+        <button type="button" class="btn btn-sm btn-default clear">
+            <f:image src="EXT:core/Resources/Public/Icons/T3Icons/svgs/actions/actions-delete.svg" width="16" />
+        </button>
+        <button type="button" class="btn btn-sm btn-default minimize">
+            <f:image src="EXT:core/Resources/Public/Icons/T3Icons/svgs/actions/actions-hyphen.svg" width="14" />
+        </button>
+        <button type="button" class="btn btn-sm btn-default maximize">
+            <f:image src="EXT:core/Resources/Public/Icons/T3Icons/svgs/actions/actions-square.svg" width="14" />
+        </button>
+    </div>
+    <div class="chatbox-history">
+        <div class="chatbox-history-content"></div>
+    </div>
+    <div class="chatbox-input form-row">
+        <div class="input-group">
+            <textarea class="form-control message"></textarea>
+            <button type="button" class="btn btn-default send-message">
+                <f:image src="EXT:core/Resources/Public/Icons/T3Icons/svgs/actions/actions-message.svg" width="16" />
+            </button>
+        </div>
+    </div>
+</div>
+
+<f:asset.script identifier="chatbox-js" src="EXT:chatbot/Resources/Public/JavaScript/chatbot.js" data="{chatbotUri: chatbotUri}" />
+<f:asset.css identifier="chatbox-css" href="EXT:chatbot/Resources/Public/Css/chatbot.css" />

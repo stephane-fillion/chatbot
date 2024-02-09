@@ -1,0 +1,24 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: true
+
+  Ameos\Chatbot\:
+    resource: "../Classes/*"
+
+  Ameos\Chatbot\Controller\ChatbotController:
+    public: true
+
+
+  Ameos\Chatbot\Command\QuestionCommand:
+    tags:
+      - name: "console.command"
+        command: "chatbot:question"
+        schedulable: false
+
+  Ameos\Chatbot\EventListener\AfterBackendPageRenderListener:
+    tags:
+      - name: event.listener
+        identifier: "chatbot"
+        event: TYPO3\CMS\Backend\Controller\Event\AfterBackendPageRenderEvent
