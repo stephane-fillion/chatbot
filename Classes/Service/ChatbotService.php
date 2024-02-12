@@ -80,7 +80,7 @@ class ChatbotService
     }
 
     /**
-     * build systemp prompt
+     * build system prompt
      *
      * @param string $language
      * @return string
