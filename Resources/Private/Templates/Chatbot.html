@@ -14,14 +14,16 @@
     <div class="chatbox-history">
         <div class="chatbox-history-content"></div>
     </div>
-    <div class="chatbox-input form-row">
-        <div class="input-group">
-            <textarea class="form-control message"></textarea>
-            <button type="button" class="btn btn-default send-message">
-                <f:image src="EXT:core/Resources/Public/Icons/T3Icons/svgs/actions/actions-message.svg" width="16" />
-            </button>
+    <form class="chatbox-form">
+        <div class="chatbox-input form-row">
+            <div class="input-group">                
+                <input type="text" class="form-control message" />
+                <button type="submit" class="btn btn-default send-message">
+                    <f:image src="EXT:core/Resources/Public/Icons/T3Icons/svgs/actions/actions-message.svg" width="16" />
+                </button>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 
 <f:asset.script identifier="chatbox-js" src="EXT:chatbot/Resources/Public/JavaScript/chatbot.js" data="{chatbotUri: chatbotUri}" />
