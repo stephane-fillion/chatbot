@@ -3,7 +3,9 @@ window.addEventListener('load', () => {
 
     document.querySelector(".chatbox .chatbox-history").style.maxHeight = (window.innerHeight / 2) + "px";
 
-    document.querySelector(".chatbox .send-message").addEventListener('click', () => {
+    document.querySelector(".chatbox .chatbox-form").addEventListener('submit', (e) => {
+        e.preventDefault();
+
         let message = document.querySelector(".message").value;
         if (message) {
             document.querySelector(".send-message").disabled = true;
