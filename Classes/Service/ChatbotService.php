@@ -5,25 +5,37 @@ declare(strict_types=1);
 namespace Ameos\Chatbot\Service;
 
 use GuzzleHttp\RequestOptions;
+use TYPO3\CMS\Backend\Tree\Repository\PageTreeRepository;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
-use TYPO3\CMS\Core\Database\Connection;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\RequestFactory;
+use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class ChatbotService
 {
     /**
+     * @var BackendUserAuthentication
+     */
+    private BackendUserAuthentication $backendUser;
+
+    /**
      * constructor
      * @param RequestFactory $requestFactory
      * @param ExtensionConfiguration $extensionConfiguration
      * @param ConnectionPool $connectionPool
+     * @param PageTreeRepository $pageTreeRepository
      */
     public function __construct(
         private readonly RequestFactory $requestFactory,
         private readonly ExtensionConfiguration $extensionConfiguration,
         private readonly ConnectionPool $connectionPool,
+        private readonly PageTreeRepository $pageTreeRepository
     ) {
+        $this->backendUser = Environment::isCli() ? null : $GLOBALS['BE_USER'];
     }
 
     /**
@@ -69,8 +81,6 @@ class ChatbotService
 
     /**
      * build systemp prompt
-     * add tree (TODO)
-     * add type of record (TODO)
      *
      * @param string $language
      * @return string
@@ -78,7 +88,7 @@ class ChatbotService
     private function buildSystemPrompt(string $language = null): string
     {
         $records = $this->getEnabledRecord($language);
-        $pagesTree = $this->getPagesTree();
+        $pagesTree = $this->cleanPageTrees($this->getAllEntryPointPageTrees());
 
         return sprintf(
             LocalizationUtility::translate('systemPrompt', 'chatbot', null, $language),
@@ -88,36 +98,90 @@ class ChatbotService
     }
 
     /**
-     * return pages tree
+     * clean pages tree
      *
-     * @param int $parent
+     * @param array $pagesTree
      * @return array
      */
-    private function getPagesTree(int $parent = 0): array
+    private function cleanPageTrees(array $pagesTree): array
     {
-        $queryBuilder = $this->connectionPool->getQueryBuilderForTable('pages');
-        $pages = $queryBuilder
-            ->select('uid', 'title')
-            ->from('pages')
-            ->where(
-                $queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter($parent, Connection::PARAM_INT))
-            )
-            ->orderBy('sorting', 'ASC')
-            ->executeQuery();
-
-        $tree = [];
-        while ($page = $pages->fetchAssociative()) {
-            $pageTree = [
+        $cleanedPagesTree = [];
+        foreach ($pagesTree as $page) {
+            $cleanedPage = [
                 'uid' => (int)$page['uid'],
                 'title' => $page['title'],
             ];
-            $childs = $this->getPagesTree($pageTree['uid']);
-            if (!empty($childs)) {
-                $pageTree['childs'] = $childs;
+            if (isset($page['_children']) && is_array($page['_children']) && !empty($page['_children'])) {
+                $cleanedPage['_children'] = $this->cleanPageTrees($page['_children']);
             }
-            $tree[] = $pageTree;
+            $cleanedPagesTree[] = $cleanedPage;
         }
-        return $tree;
+        return $cleanedPagesTree;
+
+    }
+
+    /**
+     * Fetches all pages for all tree entry points the user is allowed to see
+     *
+     * @return array
+     */
+    private function getAllEntryPointPageTrees(): array
+    {
+        $permClause = $this->backendUser->getPagePermsClause(Permission::PAGE_SHOW);
+
+        $rootRecord = [
+            'uid' => 0,
+            'title' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'] ?: 'TYPO3',
+        ];
+        $entryPointRecords = [];
+        $entryPointIds = null;
+    
+        //watch out for deleted pages returned as webmount
+        $mountPoints = array_map('intval', $this->backendUser->returnWebmounts());
+        $mountPoints = array_unique($mountPoints);
+
+        // Switch to multiple-entryPoint-mode if the rootPage is to be mounted.
+        // (other mounts would appear duplicated in the pid = 0 tree otherwise)
+        if (in_array(0, $mountPoints, true)) {
+            $entryPointIds = $mountPoints;
+        }
+
+        if ($entryPointIds === null) {
+            $rootRecord = $this->pageTreeRepository->getTreeLevels($rootRecord, 99, $mountPoints);
+
+            $mountPointOrdering = array_flip($mountPoints);
+            if (isset($rootRecord['_children'])) {
+                usort($rootRecord['_children'], static function ($a, $b) use ($mountPointOrdering) {
+                    return ($mountPointOrdering[$a['uid']] ?? 0) <=> ($mountPointOrdering[$b['uid']] ?? 0);
+                });
+            }
+
+            $entryPointRecords[] = $rootRecord;
+        } else {
+            foreach ($entryPointIds as $k => $entryPointId) {
+                if ($entryPointId === 0) {
+                    $entryPointRecord = $rootRecord;
+                } else {
+                    $entryPointRecord = BackendUtility::getRecordWSOL('pages', $entryPointId, 'uid, title', $permClause);
+
+                    if ($entryPointRecord !== null && !$this->backendUser->isInWebMount($entryPointId)) {
+                        $entryPointRecord = null;
+                    }
+                    if ($entryPointRecord === null) {
+                        continue;
+                    }
+                }
+
+                $entryPointRecord['uid'] = (int)$entryPointRecord['uid'];
+                $entryPointRecord = $this->pageTreeRepository->getTree($entryPointRecord['uid'], null, $entryPointIds);
+
+                if (is_array($entryPointRecord) && !empty($entryPointRecord)) {
+                    $entryPointRecords[$k] = $entryPointRecord;
+                }
+            }
+        }
+
+        return $entryPointRecords;
     }
 
     /**
