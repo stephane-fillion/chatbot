@@ -1,5 +1,8 @@
-# cat=basic; type=string; label=ChatGPT Api key
-chatgpt_apikey = 
+# cat=basic; type=options[ChatGPT=chatgpt,MistralAI=mistralai]; label=IA
+endpoint = chatgpt
 
-# cat=basic; type=string; label=ChatGPT model
-chatgpt_model = gpt-3.5-turbo
+# cat=basic; type=string; label=Api key
+apikey = 
+
+# cat=basic; type=string; label=Model
+model = gpt-3.5-turbo
