@@ -4,42 +4,27 @@ declare(strict_types=1);
 
 namespace Ameos\Chatbot\Service;
 
+use Ameos\Chatbot\Enum\Configuration;
 use Ameos\Chatbot\Exception\IaNotSupportedException;
 use GuzzleHttp\RequestOptions;
-use TYPO3\CMS\Backend\Tree\Repository\PageTreeRepository;
-use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
-use TYPO3\CMS\Core\Core\Environment;
-use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\RequestFactory;
-use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class ChatbotService
 {
-    private const ENDPOINT_CHATGPT = 'https://api.openai.com/v1/chat/completions';
+    private const ENDPOINT_OPENAI = 'https://api.openai.com/v1/chat/completions';
     private const ENDPOINT_MISTRALAI = 'https://api.mistral.ai/v1/chat/completions';
-
-    /**
-     * @var BackendUserAuthentication
-     */
-    private BackendUserAuthentication $backendUser;
 
     /**
      * constructor
      * @param RequestFactory $requestFactory
      * @param ExtensionConfiguration $extensionConfiguration
-     * @param ConnectionPool $connectionPool
-     * @param PageTreeRepository $pageTreeRepository
      */
     public function __construct(
         private readonly RequestFactory $requestFactory,
-        private readonly ExtensionConfiguration $extensionConfiguration,
-        private readonly ConnectionPool $connectionPool,
-        private readonly PageTreeRepository $pageTreeRepository
+        private readonly ExtensionConfiguration $extensionConfiguration
     ) {
-        $this->backendUser = Environment::isCli() ? null : $GLOBALS['BE_USER'];
     }
 
     /**
@@ -49,17 +34,20 @@ class ChatbotService
      */
     private function getEndpoint(): string
     {
-        $endpoint = $this->extensionConfiguration->get('chatbot', 'endpoint');
+        $endpoint = $this->extensionConfiguration->get(
+            Configuration::Extension->value,
+            Configuration::Endpoint->value
+        );
 
         switch ($endpoint) {
-            case 'chatgpt':
-                return self::ENDPOINT_CHATGPT;
+            case Configuration::EndpointOpenAI:
+                return self::ENDPOINT_OPENAI;
                 break;
 
-            case 'mistralai':
+            case Configuration::EndpointMistralAI:
                 return self::ENDPOINT_MISTRALAI;
                 break;
-            
+
             default:
                 throw new IaNotSupportedException(sprintf('IA %s not supported', $endpoint));
                 break;
@@ -69,11 +57,11 @@ class ChatbotService
     /**
      * ask question
      *
-     * @param string $message
-     * @param string $language
+     * @param string $userPrompt
+     * @param string $systemPrompt
      * @return array
      */
-    public function request(string $message, string $language = null): string
+    public function request(string $userPrompt, string $systemPrompt): string
     {
         $response = $this->requestFactory->request(
             $this->getEndpoint(),
@@ -82,13 +70,19 @@ class ChatbotService
                 RequestOptions::HEADERS => [
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json',
-                    'Authorization' => 'Bearer ' . $this->extensionConfiguration->get('chatbot', 'apikey')
+                    'Authorization' => 'Bearer ' . $this->extensionConfiguration->get(
+                        Configuration::Extension->value,
+                        Configuration::ApiKey->value
+                    )
                 ],
                 RequestOptions::JSON => [
-                    'model' => $this->extensionConfiguration->get('chatbot', 'model'),
+                    'model' => $this->extensionConfiguration->get(
+                        Configuration::Extension->value,
+                        Configuration::Model->value
+                    ),
                     'messages' => [
-                        ['role' => 'user', 'content' => $message],
-                        ['role' => 'system', 'content' => $this->buildSystemPrompt($language)]
+                        ['role' => 'user', 'content' => $userPrompt],
+                        ['role' => 'system', 'content' => $systemPrompt]
                     ]
                 ]
             ]
@@ -100,135 +94,14 @@ class ChatbotService
                 $responseData = json_decode($response->getBody()->getContents(), true);
                 $answer = $responseData['choices'][0]['message']['content'] ?? '';
             } else {
-                $answer = sprintf(LocalizationUtility::translate('apiError', 'chatbox'), '');
+                $answer = sprintf(LocalizationUtility::translate('apiError', Configuration::Extension->value), '');
             }
         } catch (\Exception $e) {
-            $answer = sprintf(LocalizationUtility::translate('apiError', 'chatbox'), $e->getMessage());
+            $answer = sprintf(
+                LocalizationUtility::translate('apiError', Configuration::Extension->value),
+                $e->getMessage()
+            );
         }
         return $answer;
-    }
-
-    /**
-     * build system prompt
-     *
-     * @param string $language
-     * @return string
-     */
-    private function buildSystemPrompt(string $language = null): string
-    {
-        $records = $this->getEnabledRecord($language);
-        $pagesTree = $this->cleanPageTrees($this->getAllEntryPointPageTrees());
-
-        return sprintf(
-            LocalizationUtility::translate('systemPrompt', 'chatbot', null, $language),
-            json_encode($records),
-            json_encode($pagesTree)
-        );
-    }
-
-    /**
-     * clean pages tree
-     *
-     * @param array $pagesTree
-     * @return array
-     */
-    private function cleanPageTrees(array $pagesTree): array
-    {
-        $cleanedPagesTree = [];
-        foreach ($pagesTree as $page) {
-            $cleanedPage = [
-                'uid' => (int)$page['uid'],
-                'title' => $page['title'],
-            ];
-            if (isset($page['_children']) && is_array($page['_children']) && !empty($page['_children'])) {
-                $cleanedPage['_children'] = $this->cleanPageTrees($page['_children']);
-            }
-            $cleanedPagesTree[] = $cleanedPage;
-        }
-        return $cleanedPagesTree;
-
-    }
-
-    /**
-     * Fetches all pages for all tree entry points the user is allowed to see
-     *
-     * @return array
-     */
-    private function getAllEntryPointPageTrees(): array
-    {
-        $permClause = $this->backendUser->getPagePermsClause(Permission::PAGE_SHOW);
-
-        $rootRecord = [
-            'uid' => 0,
-            'title' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'] ?: 'TYPO3',
-        ];
-        $entryPointRecords = [];
-        $entryPointIds = null;
-    
-        //watch out for deleted pages returned as webmount
-        $mountPoints = array_map('intval', $this->backendUser->returnWebmounts());
-        $mountPoints = array_unique($mountPoints);
-
-        // Switch to multiple-entryPoint-mode if the rootPage is to be mounted.
-        // (other mounts would appear duplicated in the pid = 0 tree otherwise)
-        if (in_array(0, $mountPoints, true)) {
-            $entryPointIds = $mountPoints;
-        }
-
-        if ($entryPointIds === null) {
-            $rootRecord = $this->pageTreeRepository->getTreeLevels($rootRecord, 99, $mountPoints);
-
-            $mountPointOrdering = array_flip($mountPoints);
-            if (isset($rootRecord['_children'])) {
-                usort($rootRecord['_children'], static function ($a, $b) use ($mountPointOrdering) {
-                    return ($mountPointOrdering[$a['uid']] ?? 0) <=> ($mountPointOrdering[$b['uid']] ?? 0);
-                });
-            }
-
-            $entryPointRecords[] = $rootRecord;
-        } else {
-            foreach ($entryPointIds as $k => $entryPointId) {
-                if ($entryPointId === 0) {
-                    $entryPointRecord = $rootRecord;
-                } else {
-                    $entryPointRecord = BackendUtility::getRecordWSOL('pages', $entryPointId, 'uid, title', $permClause);
-
-                    if ($entryPointRecord !== null && !$this->backendUser->isInWebMount($entryPointId)) {
-                        $entryPointRecord = null;
-                    }
-                    if ($entryPointRecord === null) {
-                        continue;
-                    }
-                }
-
-                $entryPointRecord['uid'] = (int)$entryPointRecord['uid'];
-                $entryPointRecord = $this->pageTreeRepository->getTree($entryPointRecord['uid'], null, $entryPointIds);
-
-                if (is_array($entryPointRecord) && !empty($entryPointRecord)) {
-                    $entryPointRecords[$k] = $entryPointRecord;
-                }
-            }
-        }
-
-        return $entryPointRecords;
-    }
-
-    /**
-     * return all record type
-     *
-     * @param string $language
-     * @return array
-     */
-    private function getEnabledRecord(string $language = null): array
-    {
-        $records = [];
-        foreach ($GLOBALS['TCA'] as $table => $configuration) {
-            if (substr($configuration['ctrl']['title'], 0, 4) === 'LLL:') {
-                $records[] = LocalizationUtility::translate($configuration['ctrl']['title'], null, null, $language);
-            } else {
-                $records[] = $configuration['ctrl']['title'];
-            }
-        }
-        return $records;
     }
 }
