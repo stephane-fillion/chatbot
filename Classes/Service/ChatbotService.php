@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ameos\Chatbot\Service;
 
+use Ameos\Chatbot\Exception\IaNotSupportedException;
 use GuzzleHttp\RequestOptions;
 use TYPO3\CMS\Backend\Tree\Repository\PageTreeRepository;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -17,6 +18,9 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class ChatbotService
 {
+    private const ENDPOINT_CHATGPT = 'https://api.openai.com/v1/chat/completions';
+    private const ENDPOINT_MISTRALAI = 'https://api.mistral.ai/v1/chat/completions';
+
     /**
      * @var BackendUserAuthentication
      */
@@ -39,6 +43,30 @@ class ChatbotService
     }
 
     /**
+     * return endpoint
+     *
+     * @return string
+     */
+    private function getEndpoint(): string
+    {
+        $endpoint = $this->extensionConfiguration->get('chatbot', 'endpoint');
+
+        switch ($endpoint) {
+            case 'chatgpt':
+                return self::ENDPOINT_CHATGPT;
+                break;
+
+            case 'mistralai':
+                return self::ENDPOINT_MISTRALAI;
+                break;
+            
+            default:
+                throw new IaNotSupportedException(sprintf('IA %s not supported', $endpoint));
+                break;
+        }
+    }
+
+    /**
      * ask question
      *
      * @param string $message
@@ -48,15 +76,16 @@ class ChatbotService
     public function request(string $message, string $language = null): string
     {
         $response = $this->requestFactory->request(
-            'https://api.openai.com/v1/chat/completions',
+            $this->getEndpoint(),
             'POST',
             [
                 RequestOptions::HEADERS => [
                     'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer ' . $this->extensionConfiguration->get('chatbot', 'chatgpt_apikey')
+                    'Accept' => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->extensionConfiguration->get('chatbot', 'apikey')
                 ],
                 RequestOptions::JSON => [
-                    'model' => $this->extensionConfiguration->get('chatbot', 'chatgpt_model'),
+                    'model' => $this->extensionConfiguration->get('chatbot', 'model'),
                     'messages' => [
                         ['role' => 'user', 'content' => $message],
                         ['role' => 'system', 'content' => $this->buildSystemPrompt($language)]
