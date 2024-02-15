@@ -1,8 +1,11 @@
-# cat=basic; type=options[ChatGPT=chatgpt,MistralAI=mistralai]; label=IA
-endpoint = chatgpt
+# cat=basic; type=options[OpenAI=openai,MistralAI=mistralai]; label=IA
+endpoint = openai
 
 # cat=basic; type=string; label=Api key
 apikey = 
 
 # cat=basic; type=string; label=Model
 model = gpt-3.5-turbo
+
+# cat=basic; type=boolean; label=Activate in BE
+be_activation = 1

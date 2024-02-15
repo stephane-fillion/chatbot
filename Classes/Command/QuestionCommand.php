@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Ameos\Chatbot\Command;
 
 use Ameos\Chatbot\Service\ChatbotService;
+use Ameos\Chatbot\Service\Prompt\BackendPromptService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,9 +21,12 @@ class QuestionCommand extends Command
 
     /**
      * @param ChatbotService $chatbotService
+     * @param BackendPromptService $backendPromptService
      */
-    public function __construct(private readonly ChatbotService $chatbotService)
-    {
+    public function __construct(
+        private readonly ChatbotService $chatbotService,
+        private readonly BackendPromptService $backendPromptService
+    ) {
         parent::__construct();
     }
 
@@ -63,7 +67,10 @@ class QuestionCommand extends Command
 
         $io->title(LocalizationUtility::translate('answer', 'chatbot'));
 
-        $answer = $this->chatbotService->request($message, $input->getOption(self::OPTION_LANGUAGE));
+        $answer = $this->chatbotService->request(
+            $message,
+            $this->backendPromptService->getPrompt($input->getOption(self::OPTION_LANGUAGE))
+        );
 
         $io->text($answer);
 
