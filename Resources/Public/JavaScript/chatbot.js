@@ -12,10 +12,10 @@ window.addEventListener('load', () => {
 
             let date = new Date();
 
-            document.querySelector(".chatbox-history-content").innerHTML += ` < div class = "question question-${date.valueOf()}" >
-                < span class = "chatbox-datetime" > ${date.getHours() + ":" + date.getMinutes()} < / span >
+            document.querySelector(".chatbox-history-content").innerHTML += ` <div class="question question-${date.valueOf()}">
+                <span class="chatbox-datetime">${date.getHours() + ":" + date.getMinutes()} </span>
                 ${message}
-            <  / div > `;
+            </div>`;
 
             document.querySelector(".message").value = "";
 
@@ -32,10 +32,10 @@ window.addEventListener('load', () => {
 
                 let date = new Date();
 
-                document.querySelector(".chatbox-history-content").innerHTML += ` < div class = "answer answer-${date.valueOf()}" >
-                    < span class = "chatbox-datetime" > ${date.getHours() + ":" + date.getMinutes()} < / span >
+                document.querySelector(".chatbox-history-content").innerHTML += ` <div class="answer answer-${date.valueOf()}">
+                    <span class="chatbox-datetime"> ${date.getHours() + ":" + date.getMinutes()} </span>
                     ${data.message}
-                <  / div > `;
+                </div> `;
                 document.querySelector(".chatbox .answer-" + date.valueOf()).scrollIntoView();
             })
             .catch((error) => {
