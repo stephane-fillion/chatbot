@@ -9,6 +9,6 @@ page.1707980271 = USER
 page.1707980271 {
     userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
     extensionName = Chatbot
-    pluginName = VisitorChatbot
+    pluginName = Visitor
     vendorName = Ameos
 }
