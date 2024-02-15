@@ -13,5 +13,6 @@ enum Configuration: string
     case Model = 'model';
     case BackendActivation = 'be_activation';
     case Extension = 'chatbot';
-    case VisitorSystemPrompt = 'chatbot_system_prompt';
+    case VisitorSystemPrompt = 'system_prompt';
+    case VisitorUserPrompt = 'user_prompt';
 }

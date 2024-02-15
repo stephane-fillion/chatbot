@@ -17,7 +17,7 @@ class BackendPromptService
     /**
      * @var BackendUserAuthentication
      */
-    private BackendUserAuthentication $backendUser;
+    private ?BackendUserAuthentication $backendUser;
 
     /**
      * constructor
@@ -37,6 +37,7 @@ class BackendPromptService
      */
     public function getPrompt(string $language = null): string
     {
+        return 'sysprompt';
         $records = $this->getEnabledRecord($language);
         $pagesTree = $this->cleanPageTrees($this->getAllEntryPointPageTrees());
 
@@ -76,7 +77,7 @@ class BackendPromptService
      */
     private function getAllEntryPointPageTrees(): array
     {
-        $permClause = $this->backendUser->getPagePermsClause(Permission::PAGE_SHOW);
+        $permClause = Environment::isCli() ? '' : $this->backendUser->getPagePermsClause(Permission::PAGE_SHOW);
 
         $rootRecord = [
             'uid' => 0,
@@ -86,9 +87,13 @@ class BackendPromptService
         $entryPointIds = null;
 
         //watch out for deleted pages returned as webmount
-        $mountPoints = array_map('intval', $this->backendUser->returnWebmounts());
-        $mountPoints = array_unique($mountPoints);
-
+        if (Environment::isCli()) {
+            $mountPoints = [0];
+        } else {
+            $mountPoints = array_map('intval', $this->backendUser->returnWebmounts());
+            $mountPoints = array_unique($mountPoints);
+        }
+        
         // Switch to multiple-entryPoint-mode if the rootPage is to be mounted.
         // (other mounts would appear duplicated in the pid = 0 tree otherwise)
         if (in_array(0, $mountPoints, true)) {

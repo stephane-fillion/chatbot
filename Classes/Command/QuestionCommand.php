@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ameos\Chatbot\Command;
 
+use Ameos\Chatbot\Enum\Configuration;
 use Ameos\Chatbot\Service\ChatbotService;
 use Ameos\Chatbot\Service\Prompt\BackendPromptService;
 use Symfony\Component\Console\Command\Command;
@@ -69,7 +70,14 @@ class QuestionCommand extends Command
 
         $answer = $this->chatbotService->request(
             $message,
-            $this->backendPromptService->getPrompt($input->getOption(self::OPTION_LANGUAGE))
+            [],
+            $this->backendPromptService->getPrompt($input->getOption(self::OPTION_LANGUAGE)),
+            LocalizationUtility::translate(
+                'additionalUserPrompt',
+                Configuration::Extension->value,
+                null,
+                $input->getOption(self::OPTION_LANGUAGE)
+            )
         );
 
         $io->text($answer);

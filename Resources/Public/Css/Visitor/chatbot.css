@@ -1,11 +1,10 @@
 .chatbox {
     border: solid thin gray;
-    width: 250px;
+    width: 800px;
     position: absolute;
     right: 0;
     bottom: 0;
     z-index: 999999;
-    max-width: 800px;
     overflow: scroll;
 }
 
@@ -31,7 +30,7 @@
     display: flex;
     flex-grow: 1;
     flex-shrink: 1;
-    min-height: 150px;
+    min-height: 500px;
     overflow: scroll;
     flex-wrap: wrap;
     scroll-behavior: smooth;

@@ -42,7 +42,7 @@ class ChatbotMiddleware implements MiddlewareInterface
         if ($request->getUri()->getPath() === self::URI_CHATBOT) {
             /** @var NormalizedParams */
             $normalizedParams = $request->getAttribute('normalizedParams');
-            
+
             $factory = new RateLimiterFactory(
                 [
                     'id' => 'chatbot',
@@ -52,7 +52,7 @@ class ChatbotMiddleware implements MiddlewareInterface
                 ],
                 GeneralUtility::makeInstance(CachingFrameworkStorage::class)
             );
-            
+
             $limiter = $factory->create($normalizedParams->getRemoteAddress());
             $limit = $limiter->consume();
 
@@ -63,18 +63,23 @@ class ChatbotMiddleware implements MiddlewareInterface
             $configuration = $request->getAttribute('language')->toArray();
 
             $body = json_decode($request->getBody()->getContents(), true);
-            return new JsonResponse([
-                'message' => $this->chatbotService->request(
-                    $body['message'] ?? '',
-                    $configuration[Configuration::VisitorSystemPrompt->value] ?? ''
-                ),
+            return new JsonResponse(
+                [
+                    'question' => $body['message'] ?? '',
+                    'answer' => $this->chatbotService->request(
+                        $body['message'] ?? '',
+                        $body['history'] ?? [],
+                        $configuration[Configuration::VisitorSystemPrompt->value] ?? '',
+                        $configuration[Configuration::VisitorUserPrompt->value] ?? ''
+                    )
+                ],
                 HttpFoundationResponse::HTTP_OK,
                 [
                     'X-RateLimit-Remaining' => $limit->getRemainingTokens(),
                     'X-RateLimit-Retry-After' => $limit->getRetryAfter()->getTimestamp() - time(),
                     'X-RateLimit-Limit' => $limit->getLimit(),
                 ]
-            ]);
+            );
         }
 
         return $handler->handle($request);

@@ -58,13 +58,26 @@ class ChatbotService
      * ask question
      *
      * @param string $userPrompt
+     * @param array $history
      * @param string $systemPrompt
+     * @param string $additionalUserPrompt
      * @return array
      */
-    public function request(string $userPrompt, string $systemPrompt): string
-    {
+    public function request(
+        string $userPrompt,
+        array $history,
+        string $systemPrompt,
+        ?string $additionalUserPrompt = null
+    ): string {
         $answer = '';
         try {
+            $messages = array_merge(
+                [['role' => 'system', 'content' => $systemPrompt]],
+                $history,
+                ($additionalUserPrompt ? [['role' => 'user', 'content' => $additionalUserPrompt]] : []),
+                [['role' => 'user', 'content' => $userPrompt]]
+            );
+
             $response = $this->requestFactory->request(
                 $this->getEndpoint(),
                 'POST',
@@ -82,10 +95,7 @@ class ChatbotService
                             Configuration::Extension->value,
                             Configuration::Model->value
                         ),
-                        'messages' => [
-                            ['role' => 'user', 'content' => $userPrompt],
-                            ['role' => 'system', 'content' => $systemPrompt]
-                        ]
+                        'messages' => $messages
                     ]
                 ]
             );

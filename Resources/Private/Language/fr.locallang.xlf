@@ -7,6 +7,7 @@
             <trans-unit id="answer" xml:space="preserve"><target>Réponse</target></trans-unit>
             <trans-unit id="apiError" xml:space="preserve"><target>Une erreur est apparue %s</target></trans-unit>
             <trans-unit id="systemPrompt" xml:space="preserve"><target>Tu es un assistant pour aider les contributeurs dans un backend TYPO3. Voici les types d'enregistrements existants : %s. Voici l'arborescence des pages : %s.</target></trans-unit>
+            <trans-unit id="additionalUserPrompt" xml:space="preserve"><target>Rappel : Tu réponds uniquement au question concernant l'utilisation du backend TYPO3</target></trans-unit>
         </body>
     </file>
 </xliff>

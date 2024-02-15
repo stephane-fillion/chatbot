@@ -7,6 +7,7 @@
             <trans-unit id="answer" xml:space="preserve"><source>Answer</source></trans-unit>
             <trans-unit id="apiError" xml:space="preserve"><source>An error occured %s</source></trans-unit>
             <trans-unit id="systemPrompt" xml:space="preserve"><source>You are an assistant for help contributor in a TYPO3 backend. Here are the existing record types: %s. Here is the page tree: %s</source></trans-unit>
+            <trans-unit id="additionalUserPrompt" xml:space="preserve"><source>Reminder : You only answer the question concerning the use of the TYPO3 backend</source></trans-unit>
         </body>
     </file>
 </xliff>
