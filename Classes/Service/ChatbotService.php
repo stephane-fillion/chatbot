@@ -40,11 +40,11 @@ class ChatbotService
         );
 
         switch ($endpoint) {
-            case Configuration::EndpointOpenAI:
+            case Configuration::EndpointOpenAI->value:
                 return self::ENDPOINT_OPENAI;
                 break;
 
-            case Configuration::EndpointMistralAI:
+            case Configuration::EndpointMistralAI->value:
                 return self::ENDPOINT_MISTRALAI;
                 break;
 
@@ -63,42 +63,45 @@ class ChatbotService
      */
     public function request(string $userPrompt, string $systemPrompt): string
     {
-        $response = $this->requestFactory->request(
-            $this->getEndpoint(),
-            'POST',
-            [
-                RequestOptions::HEADERS => [
-                    'Content-Type' => 'application/json',
-                    'Accept' => 'application/json',
-                    'Authorization' => 'Bearer ' . $this->extensionConfiguration->get(
-                        Configuration::Extension->value,
-                        Configuration::ApiKey->value
-                    )
-                ],
-                RequestOptions::JSON => [
-                    'model' => $this->extensionConfiguration->get(
-                        Configuration::Extension->value,
-                        Configuration::Model->value
-                    ),
-                    'messages' => [
-                        ['role' => 'user', 'content' => $userPrompt],
-                        ['role' => 'system', 'content' => $systemPrompt]
-                    ]
-                ]
-            ]
-        );
-
         $answer = '';
         try {
+            $response = $this->requestFactory->request(
+                $this->getEndpoint(),
+                'POST',
+                [
+                    RequestOptions::HEADERS => [
+                        'Content-Type' => 'application/json',
+                        'Accept' => 'application/json',
+                        'Authorization' => 'Bearer ' . $this->extensionConfiguration->get(
+                            Configuration::Extension->value,
+                            Configuration::ApiKey->value
+                        )
+                    ],
+                    RequestOptions::JSON => [
+                        'model' => $this->extensionConfiguration->get(
+                            Configuration::Extension->value,
+                            Configuration::Model->value
+                        ),
+                        'messages' => [
+                            ['role' => 'user', 'content' => $userPrompt],
+                            ['role' => 'system', 'content' => $systemPrompt]
+                        ]
+                    ]
+                ]
+            );
+
             if ($response->getStatusCode() === 200) {
                 $responseData = json_decode($response->getBody()->getContents(), true);
                 $answer = $responseData['choices'][0]['message']['content'] ?? '';
             } else {
-                $answer = sprintf(LocalizationUtility::translate('apiError', Configuration::Extension->value), '');
+                $answer = sprintf(
+                    LocalizationUtility::translate('apiError', Configuration::Extension->value, null, 'default'),
+                    ''
+                );
             }
         } catch (\Exception $e) {
             $answer = sprintf(
-                LocalizationUtility::translate('apiError', Configuration::Extension->value),
+                LocalizationUtility::translate('apiError', Configuration::Extension->value, null, 'default'),
                 $e->getMessage()
             );
         }
