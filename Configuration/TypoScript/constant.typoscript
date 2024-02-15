@@ -1,0 +1,6 @@
+plugin.tx_chatbot.includeJavaScript = 1
+plugin.tx_chatbot.includeCss = 1
+
+plugin.tx_chatbot.apiKey = 
+plugin.tx_chatbot.model = 
+plugin.tx_chatbot.endpoint = 

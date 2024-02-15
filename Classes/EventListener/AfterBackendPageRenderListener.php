@@ -38,7 +38,7 @@ class AfterBackendPageRenderListener
         );
         if ($backendActivation) {
             $view = GeneralUtility::makeInstance(StandaloneView::class);
-            $view->setTemplatePathAndFilename('EXT:chatbot/Resources/Private/Templates/Chatbot.html');
+            $view->setTemplatePathAndFilename('EXT:chatbot/Resources/Private/Templates/Contributor/Chatbot.html');
             $view->assign('chatbotUri', $this->uriBuilder->buildUriFromRoute('ameos_chatbot_question'));
 
             $event->setContent($event->getContent() . $view->render());

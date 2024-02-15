@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Ameos\Chatbot\Controller\Backend;
+namespace Ameos\Chatbot\Controller;
 
 use Ameos\Chatbot\Service\ChatbotService;
 use Ameos\Chatbot\Service\Prompt\BackendPromptService;
@@ -10,7 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
 
-final class ChatbotController
+final class ContributorController
 {
     /**
      * @param ChatbotService $chatbotService

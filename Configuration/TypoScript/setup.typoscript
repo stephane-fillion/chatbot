@@ -1,0 +1,14 @@
+plugin.tx_chatbot {
+    settings {
+        includeJavaScript = {$plugin.tx_chatbot.includeJavaScript}
+        includeCss = {$plugin.tx_chatbot.includeCss}
+    }
+}
+
+page.1707980271 = USER
+page.1707980271 {
+    userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
+    extensionName = Chatbot
+    pluginName = VisitorChatbot
+    vendorName = Ameos
+}
