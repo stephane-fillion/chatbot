@@ -4,24 +4,22 @@ declare(strict_types=1);
 
 use Ameos\Chatbot\Enum\Configuration;
 
-// TODO use LLL
-
 $GLOBALS['SiteConfiguration']['site_language']['columns'][Configuration::VisitorSystemPrompt->value] = [
-    'label' => 'System prompt',
+    'label' => 'LLL:EXT:chatbot/Resources/Private/Language/locallang.xlf:visitorSytemPrompt',
     'config' => [
         'type' => 'text',
     ]
 ];
 
 $GLOBALS['SiteConfiguration']['site_language']['columns'][Configuration::VisitorUserPrompt->value] = [
-    'label' => 'Additional user prompt',
+    'label' => 'LLL:EXT:chatbot/Resources/Private/Language/locallang.xlf:visitorUserPrompt',
     'config' => [
         'type' => 'text',
     ]
 ];
 
 $GLOBALS['SiteConfiguration']['site_language']['columns'][Configuration::DataPrompt->value] = [
-    'label' => 'Callback for retrieve data for the chatbot',
+    'label' => 'LLL:EXT:chatbot/Resources/Private/Language/locallang.xlf:dataGenerator',
     'config' => [
         'type' => 'select',
         'renderType' => 'selectSingle',
@@ -32,7 +30,7 @@ $GLOBALS['SiteConfiguration']['site_language']['columns'][Configuration::DataPro
 ];
 
 $GLOBALS['SiteConfiguration']['site_language']['columns'][Configuration::KeepHistory->value] = [
-    'label' => 'Send conversation history to AI for new question',
+    'label' => 'LLL:EXT:chatbot/Resources/Private/Language/locallang.xlf:keepHistory',
     'config' => [
         'type' => 'check',
         'default' => 1,
@@ -40,7 +38,7 @@ $GLOBALS['SiteConfiguration']['site_language']['columns'][Configuration::KeepHis
 ];
 
 $GLOBALS['SiteConfiguration']['site_language']['palettes']['chatbot'] = [
-    'label' => 'Chatbot',
+    'label' => 'LLL:EXT:chatbot/Resources/Private/Language/locallang.xlf:chatbot',
     'showitem' => Configuration::VisitorSystemPrompt->value . ', --linebreak--, '
         . Configuration::VisitorUserPrompt->value . ', --linebreak--, '
         . Configuration::DataPrompt->value . ', '
