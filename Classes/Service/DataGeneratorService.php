@@ -6,6 +6,7 @@ namespace Ameos\Chatbot\Service;
 
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class DataGeneratorService
 {
@@ -29,7 +30,7 @@ class DataGeneratorService
     {
         $fqcn = $this->configurationService->getDataGenerator($siteLanguage);
         if ($fqcn) {
-            $generator = new $fqcn();
+            $generator = GeneralUtility::makeInstance($fqcn);
             return $generator($site);
         }
         return null;
