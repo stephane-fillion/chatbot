@@ -87,7 +87,6 @@ class ChatbotService
 
     /**
      * return client limit
-     * TODO : configurable limit
      *
      * @param ServerRequestInterface $request
      * @return RateLimit|false
