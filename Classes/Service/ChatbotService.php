@@ -90,21 +90,21 @@ class ChatbotService
      * TODO : configurable limit
      *
      * @param ServerRequestInterface $request
-     * @return RateLimit
+     * @return RateLimit|false
      */
-    public function getClientLimit(ServerRequestInterface $request): RateLimit
+    public function getClientLimit(ServerRequestInterface $request): RateLimit|false
     {
-        $factory = new RateLimiterFactory(
-            [
-                'id' => 'chatbot',
-                'policy' => 'sliding_window',
-                'limit' => 30,
-                'interval' => '15 minutes'
-            ],
-            GeneralUtility::makeInstance(CachingFrameworkStorage::class)
-        );
+        $configuration = $this->configurationService->getRateLimiterConfiguration();
+        if ($configuration['activation']) {
+            $factory = new RateLimiterFactory(
+                $configuration,
+                GeneralUtility::makeInstance(CachingFrameworkStorage::class)
+            );
 
-        $limiter = $factory->create($request->getAttribute('normalizedParams')->getRemoteAddress());
-        return $limiter->consume();
+            $limiter = $factory->create($request->getAttribute('normalizedParams')->getRemoteAddress());
+            return $limiter->consume();
+        } else {
+            return false;
+        }
     }
 }

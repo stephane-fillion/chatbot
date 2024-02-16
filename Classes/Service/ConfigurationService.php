@@ -143,4 +143,21 @@ class ConfigurationService
             return $dataGeneratorFQCN;
         }
     }
+
+    /**
+     * return rate limiter configuration
+     *
+     * @return array
+     */
+    public function getRateLimiterConfiguration(): array
+    {
+        $configuration = $this->extensionConfiguration->get(
+            Configuration::Extension->value,
+            Configuration::RateLimiter->value
+        );
+        $configuration['activation'] = (bool)$configuration['activation'];
+        $configuration['rate'] = empty($configuration['rate']) ? [] : json_decode($configuration['rate'], true);
+
+        return $configuration;
+    }
 }

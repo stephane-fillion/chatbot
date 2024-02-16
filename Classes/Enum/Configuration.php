@@ -17,4 +17,5 @@ enum Configuration: string
     case VisitorUserPrompt = 'user_prompt';
     case DataPrompt = 'data_prompt';
     case KeepHistory = 'keep_history';
+    case RateLimiter = 'ratelimiter';
 }

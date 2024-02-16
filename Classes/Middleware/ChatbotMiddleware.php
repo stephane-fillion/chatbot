@@ -46,10 +46,21 @@ class ChatbotMiddleware implements MiddlewareInterface
             $site = $request->getAttribute('site');
             $siteLanguage = $request->getAttribute('language');
 
+            // http headers
+            $headers = [];
+
             // check limit
             $limit = $this->chatbotService->getClientLimit($request);
-            if (false === $limit->isAccepted()) {
-                throw new TooManyRequestsHttpException('Too many request');
+            if ($limit) {
+                if ($limit->isAccepted() === false) {
+                    throw new TooManyRequestsHttpException('Too many request');
+                }
+
+                $headers = [
+                    'X-RateLimit-Remaining' => $limit->getRemainingTokens(),
+                    'X-RateLimit-Retry-After' => $limit->getRetryAfter()->getTimestamp() - time(),
+                    'X-RateLimit-Limit' => $limit->getLimit(),
+                ];
             }
 
             // return chatbot response
@@ -65,11 +76,7 @@ class ChatbotMiddleware implements MiddlewareInterface
                     )
                 ],
                 HttpFoundationResponse::HTTP_OK,
-                [
-                    'X-RateLimit-Remaining' => $limit->getRemainingTokens(),
-                    'X-RateLimit-Retry-After' => $limit->getRetryAfter()->getTimestamp() - time(),
-                    'X-RateLimit-Limit' => $limit->getLimit(),
-                ]
+                $headers
             );
         }
 
