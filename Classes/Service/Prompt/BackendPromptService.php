@@ -35,9 +35,8 @@ class BackendPromptService
      * @param string $language
      * @return string
      */
-    public function getPrompt(string $language = null): string
+    public function getSystemPrompt(string $language = null): string
     {
-        return 'sysprompt';
         $records = $this->getEnabledRecord($language);
         $pagesTree = $this->cleanPageTrees($this->getAllEntryPointPageTrees());
 
@@ -45,6 +44,22 @@ class BackendPromptService
             LocalizationUtility::translate('systemPrompt', Configuration::Extension->value, null, $language),
             json_encode($records),
             json_encode($pagesTree)
+        );
+    }
+
+    /**
+     * return user prompt
+     *
+     * @param string $language
+     * @return string
+     */
+    public function getUserPrompt(string $language = null): string
+    {
+        return LocalizationUtility::translate(
+            'additionalUserPrompt',
+            Configuration::Extension->value,
+            null,
+            $language
         );
     }
 
@@ -93,7 +108,7 @@ class BackendPromptService
             $mountPoints = array_map('intval', $this->backendUser->returnWebmounts());
             $mountPoints = array_unique($mountPoints);
         }
-        
+
         // Switch to multiple-entryPoint-mode if the rootPage is to be mounted.
         // (other mounts would appear duplicated in the pid = 0 tree otherwise)
         if (in_array(0, $mountPoints, true)) {

@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Ameos\Chatbot\Controller;
 
-use Ameos\Chatbot\Enum\Configuration;
 use Ameos\Chatbot\Service\ChatbotService;
 use Ameos\Chatbot\Service\Prompt\BackendPromptService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
-use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 final class ContributorController
 {
@@ -39,8 +37,8 @@ final class ContributorController
             'answer' => $this->chatbotService->request(
                 $body['message'] ?? '',
                 $body['history'] ?? [],
-                $this->backendPromptService->getPrompt(),
-                LocalizationUtility::translate('additionalUserPrompt', Configuration::Extension->value),
+                $this->backendPromptService->getSystemPrompt(),
+                $this->backendPromptService->getUserPrompt(),
             )
         ]);
     }

@@ -15,4 +15,6 @@ enum Configuration: string
     case Extension = 'chatbot';
     case VisitorSystemPrompt = 'system_prompt';
     case VisitorUserPrompt = 'user_prompt';
+    case DataPrompt = 'data_prompt';
+    case KeepHistory = 'keep_history';
 }

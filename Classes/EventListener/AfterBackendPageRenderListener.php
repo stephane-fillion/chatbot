@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Ameos\Chatbot\EventListener;
 
-use Ameos\Chatbot\Enum\Configuration;
+use Ameos\Chatbot\Service\ConfigurationService;
 use TYPO3\CMS\Backend\Controller\Event\AfterBackendPageRenderEvent;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 
@@ -16,11 +15,11 @@ class AfterBackendPageRenderListener
     /**
      * constructor
      * @param UriBuilder $uriBuilder
-     * @param ExtensionConfiguration $extensionConfiguration
+     * @param ConfigurationService $configurationService
      */
     public function __construct(
         private readonly UriBuilder $uriBuilder,
-        private readonly ExtensionConfiguration $extensionConfiguration
+        private readonly ConfigurationService $configurationService
     ) {
     }
 
@@ -32,11 +31,7 @@ class AfterBackendPageRenderListener
      */
     public function __invoke(AfterBackendPageRenderEvent $event): void
     {
-        $backendActivation = (bool)$this->extensionConfiguration->get(
-            Configuration::Extension->value,
-            Configuration::BackendActivation->value
-        );
-        if ($backendActivation) {
+        if ($this->configurationService->isEnabledInBackend()) {
             $view = GeneralUtility::makeInstance(StandaloneView::class);
             $view->setTemplatePathAndFilename('EXT:chatbot/Resources/Private/Templates/Contributor/Chatbot.html');
             $view->assign('chatbotUri', $this->uriBuilder->buildUriFromRoute('ameos_chatbot_question'));

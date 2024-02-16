@@ -5,53 +5,26 @@ declare(strict_types=1);
 namespace Ameos\Chatbot\Service;
 
 use Ameos\Chatbot\Enum\Configuration;
-use Ameos\Chatbot\Exception\IaNotSupportedException;
 use GuzzleHttp\RequestOptions;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
+use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\RateLimiter\RateLimit;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use TYPO3\CMS\Core\Http\RequestFactory;
+use TYPO3\CMS\Core\RateLimiter\Storage\CachingFrameworkStorage;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class ChatbotService
 {
-    private const ENDPOINT_OPENAI = 'https://api.openai.com/v1/chat/completions';
-    private const ENDPOINT_MISTRALAI = 'https://api.mistral.ai/v1/chat/completions';
-
     /**
      * constructor
      * @param RequestFactory $requestFactory
-     * @param ExtensionConfiguration $extensionConfiguration
+     * @param ConfigurationService $configurationService
      */
     public function __construct(
         private readonly RequestFactory $requestFactory,
-        private readonly ExtensionConfiguration $extensionConfiguration
+        private readonly ConfigurationService $configurationService
     ) {
-    }
-
-    /**
-     * return endpoint
-     *
-     * @return string
-     */
-    private function getEndpoint(): string
-    {
-        $endpoint = $this->extensionConfiguration->get(
-            Configuration::Extension->value,
-            Configuration::Endpoint->value
-        );
-
-        switch ($endpoint) {
-            case Configuration::EndpointOpenAI->value:
-                return self::ENDPOINT_OPENAI;
-                break;
-
-            case Configuration::EndpointMistralAI->value:
-                return self::ENDPOINT_MISTRALAI;
-                break;
-
-            default:
-                throw new IaNotSupportedException(sprintf('IA %s not supported', $endpoint));
-                break;
-        }
     }
 
     /**
@@ -79,22 +52,16 @@ class ChatbotService
             );
 
             $response = $this->requestFactory->request(
-                $this->getEndpoint(),
+                $this->configurationService->getEndpoint(),
                 'POST',
                 [
                     RequestOptions::HEADERS => [
                         'Content-Type' => 'application/json',
                         'Accept' => 'application/json',
-                        'Authorization' => 'Bearer ' . $this->extensionConfiguration->get(
-                            Configuration::Extension->value,
-                            Configuration::ApiKey->value
-                        )
+                        'Authorization' => 'Bearer ' . $this->configurationService->getApiKey()
                     ],
                     RequestOptions::JSON => [
-                        'model' => $this->extensionConfiguration->get(
-                            Configuration::Extension->value,
-                            Configuration::Model->value
-                        ),
+                        'model' => $this->configurationService->getModel(),
                         'messages' => $messages
                     ]
                 ]
@@ -116,5 +83,28 @@ class ChatbotService
             );
         }
         return $answer;
+    }
+
+    /**
+     * return client limit
+     * TODO : configurable limit
+     *
+     * @param ServerRequestInterface $request
+     * @return RateLimit
+     */
+    public function getClientLimit(ServerRequestInterface $request): RateLimit
+    {
+        $factory = new RateLimiterFactory(
+            [
+                'id' => 'chatbot',
+                'policy' => 'sliding_window',
+                'limit' => 30,
+                'interval' => '15 minutes'
+            ],
+            GeneralUtility::makeInstance(CachingFrameworkStorage::class)
+        );
+
+        $limiter = $factory->create($request->getAttribute('normalizedParams')->getRemoteAddress());
+        return $limiter->consume();
     }
 }

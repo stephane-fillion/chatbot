@@ -4,19 +4,16 @@ declare(strict_types=1);
 
 namespace Ameos\Chatbot\Middleware;
 
-use Ameos\Chatbot\Enum\Configuration;
 use Ameos\Chatbot\Exception\TooManyRequestsHttpException;
 use Ameos\Chatbot\Service\ChatbotService;
+use Ameos\Chatbot\Service\ConfigurationService;
+use Ameos\Chatbot\Service\Prompt\FrontendPromptService;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
 use TYPO3\CMS\Core\Http\JsonResponse;
-use TYPO3\CMS\Core\Http\NormalizedParams;
-use TYPO3\CMS\Core\RateLimiter\Storage\CachingFrameworkStorage;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class ChatbotMiddleware implements MiddlewareInterface
 {
@@ -26,9 +23,14 @@ class ChatbotMiddleware implements MiddlewareInterface
      * construct
      *
      * @param ChatbotService $chatbotService
+     * @param ConfigurationService $configurationService
+     * @param FrontendPromptService $frontendPromptService
      */
-    public function __construct(private readonly ChatbotService $chatbotService)
-    {
+    public function __construct(
+        private readonly ChatbotService $chatbotService,
+        private readonly ConfigurationService $configurationService,
+        private readonly FrontendPromptService $frontendPromptService
+    ) {
     }
 
     /**
@@ -40,37 +42,26 @@ class ChatbotMiddleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         if ($request->getUri()->getPath() === self::URI_CHATBOT) {
-            /** @var NormalizedParams */
-            $normalizedParams = $request->getAttribute('normalizedParams');
+            // get attributes
+            $site = $request->getAttribute('site');
+            $siteLanguage = $request->getAttribute('language');
 
-            $factory = new RateLimiterFactory(
-                [
-                    'id' => 'chatbot',
-                    'policy' => 'sliding_window',
-                    'limit' => 30,
-                    'interval' => '15 minutes'
-                ],
-                GeneralUtility::makeInstance(CachingFrameworkStorage::class)
-            );
-
-            $limiter = $factory->create($normalizedParams->getRemoteAddress());
-            $limit = $limiter->consume();
-
+            // check limit
+            $limit = $this->chatbotService->getClientLimit($request);
             if (false === $limit->isAccepted()) {
                 throw new TooManyRequestsHttpException('Too many request');
             }
 
-            $configuration = $request->getAttribute('language')->toArray();
-
+            // return chatbot response
             $body = json_decode($request->getBody()->getContents(), true);
             return new JsonResponse(
                 [
                     'question' => $body['message'] ?? '',
                     'answer' => $this->chatbotService->request(
                         $body['message'] ?? '',
-                        $body['history'] ?? [],
-                        $configuration[Configuration::VisitorSystemPrompt->value] ?? '',
-                        $configuration[Configuration::VisitorUserPrompt->value] ?? ''
+                        $this->configurationService->historyIsKeeped($siteLanguage) ? ($body['history'] ?? []) : [],
+                        $this->frontendPromptService->getSystemPrompt($site, $siteLanguage),
+                        $this->frontendPromptService->getUserPrompt($siteLanguage)
                     )
                 ],
                 HttpFoundationResponse::HTTP_OK,
