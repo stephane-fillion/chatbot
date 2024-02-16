@@ -95,6 +95,9 @@ class ChatbotService
     {
         $configuration = $this->configurationService->getRateLimiterConfiguration();
         if ($configuration['activation']) {
+            unset($configuration['activation']);
+
+            $configuration['id'] = 'chatbot';
             $factory = new RateLimiterFactory(
                 $configuration,
                 GeneralUtility::makeInstance(CachingFrameworkStorage::class)

@@ -105,7 +105,7 @@ class ConfigurationService
     public function getAdditionalUserPrompt(SiteLanguage $siteLanguage): ?string
     {
         $configuration = $siteLanguage->toArray();
-        return $configuration[Configuration::VisitorUserPrompt] ?? null;
+        return $configuration[Configuration::VisitorUserPrompt->value] ?? null;
     }
 
     /**
@@ -116,8 +116,8 @@ class ConfigurationService
     public function historyIsKeeped(SiteLanguage $siteLanguage): bool
     {
         $configuration = $siteLanguage->toArray();
-        return isset($configuration[Configuration::KeepHistory])
-            ? (bool)$configuration[Configuration::KeepHistory] : true;
+        return isset($configuration[Configuration::KeepHistory->value])
+            ? (bool)$configuration[Configuration::KeepHistory->value] : true;
     }
 
     /**
@@ -156,7 +156,23 @@ class ConfigurationService
             Configuration::RateLimiter->value
         );
         $configuration['activation'] = (bool)$configuration['activation'];
-        $configuration['rate'] = empty($configuration['rate']) ? [] : json_decode($configuration['rate'], true);
+        $configuration['limit'] = (int)$configuration['limit'];
+
+        switch ($configuration['policy']) {
+            case 'sliding_window':
+            case 'fixed_window':
+                unset($configuration['rate']);
+                break;
+
+            case 'sliding_window':
+                unset($configuration['interval']);
+                $configuration['rate'] = json_decode($configuration['rate'], true);
+                break;
+
+            default:
+                throw new \Exception('Rate limiter policy invalid');
+                break;
+        }
 
         return $configuration;
     }
